@@ -1,19 +1,20 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
+version: 0.2
 
-trigger:
-- main
+phases:
+  install:
+    runtime-versions:
+      nodejs: 18
+    commands:
+      - echo Installing dependencies...
+      - npm ci --legacy-peer-deps
 
-pool:
-  vmImage: ubuntu-latest
+  build:
+    commands:
+      - echo Building the React app...
+      - npm run build
 
-steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
-
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+artifacts:
+  files:
+    - '**/*'
+  base-directory: dist
+  discard-paths: no
