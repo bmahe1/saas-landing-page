@@ -1,20 +1,43 @@
-version: 0.2
+trigger:
+  branches:
+    include:
+      - main  # or your default branch
 
-phases:
-  install:
-    runtime-versions:
-      nodejs: 18
-    commands:
-      - echo Installing dependencies...
-      - npm ci --legacy-peer-deps
+pool:
+  vmImage: 'ubuntu-latest'
 
-  build:
-    commands:
-      - echo Building the React app...
-      - npm run build
+variables:
+  buildDir: 'dist'
 
-artifacts:
-  files:
-    - '**/*'
-  base-directory: dist
-  discard-paths: no
+steps:
+# 1. Checkout code
+- task: Checkout@2
+
+# 2. Install Node.js
+- task: NodeTool@0
+  inputs:
+    versionSpec: '18.x'
+  displayName: 'Install Node.js'
+
+# 3. Install dependencies
+- script: npm install
+  displayName: 'Install npm dependencies'
+
+# 4. Build project
+- script: npm run build
+  displayName: 'Build React Vite project'
+
+# 5. Upload to Azure Blob Storage
+- task: AzureCLI@2
+  inputs:
+    azureSubscription: '<YOUR-SERVICE-CONNECTION-NAME>'
+    scriptType: 'bash'
+    scriptLocation: 'inlineScript'
+    inlineScript: |
+      echo "Uploading files to Azure Blob Storage..."
+      az storage blob upload-batch \
+        --account-name <YOUR-STORAGE-ACCOUNT-NAME> \
+        --destination '$web' \
+        --source $(buildDir) \
+        --overwrite
+  displayName: 'Deploy to Azure Blob Storage'
